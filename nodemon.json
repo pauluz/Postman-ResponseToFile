@@ -1,0 +1,8 @@
+{
+  "verbose": true,
+  "ignore": ["2018-*/", "2019-*/"],
+  "execMap": {
+    "js": "node --harmony"
+  },
+  "watch": ["script.js"]
+}
