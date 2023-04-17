@@ -1,0 +1,693 @@
+{
+	"info": {
+		"_postman_id": "9197bf3b-3d7d-4842-8434-28aeba87372e",
+		"name": "Get JSONs from OpenClinica KCRI",
+		"description": "Praca dla LifeFlow",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "First - Log In",
+			"item": [
+				{
+					"name": "OpenClinica LOGIN page",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"type": "text",
+								"value": "pl,en-GB;q=0.9,en;q=0.8"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "j_username",
+									"value": "{{MY_NAME}}",
+									"description": "Oczywiście login",
+									"type": "text"
+								},
+								{
+									"key": "j_password",
+									"value": "{{MY_PASS}}",
+									"description": "Oczywiście hasło",
+									"type": "text"
+								},
+								{
+									"key": "submit",
+									"value": "Login",
+									"description": "To musi także być",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://kcri.eclinicalhosting.com/OpenClinica/j_spring_security_check?j_username={{MY_NAME}}&j_password={{MY_PASS}}&submit=Login",
+							"protocol": "https",
+							"host": [
+								"kcri",
+								"eclinicalhosting",
+								"com"
+							],
+							"path": [
+								"OpenClinica",
+								"j_spring_security_check"
+							],
+							"query": [
+								{
+									"key": "j_username",
+									"value": "{{MY_NAME}}",
+									"description": "Oczywiście login"
+								},
+								{
+									"key": "j_password",
+									"value": "{{MY_PASS}}",
+									"description": "Oczywiście hasło"
+								},
+								{
+									"key": "submit",
+									"value": "Login",
+									"description": "To musi także być"
+								}
+							]
+						},
+						"description": "Zwykłe logowanie na stronie z formularzem podając *Username* i *Password*"
+					},
+					"response": []
+				}
+			],
+			"description": "Katalog jest pierwszy - nie mogłem umieścić samego *Request* jako pierwszy na liście więc stworzyłem katalog z jednym *Request*",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "fafbc822-75d9-4135-a497-2e8a184be1f6",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "1bd6a26a-6d4f-41a7-922c-0b685305eee9",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Send response to local server",
+			"item": [
+				{
+					"name": "WA - Anim",
+					"item": [
+						{
+							"name": "WA requests",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "a4c749e0-188c-4346-862f-135be73357d9",
+										"exec": [
+											"// pauluZ - 11.2018",
+											"",
+											"let StudySubject = pm.variables.get('StudySubject');",
+											"let keepRunning  = pm.variables.get('keepRunning') || 'false';",
+											"",
+											"if (keepRunning != 'false') {",
+											"    ",
+											"    // Very important! Here we prepare a Request Name in Postman",
+											"    postman.setNextRequest(keepRunning + ' requests');",
+											"    ",
+											"    console.log('Processed: ' + StudySubject);",
+											"} else {",
+											"    console.log('End processed: ' + StudySubject)",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "5c466051-f9c2-4282-9f64-61e22baea8b9",
+										"exec": [
+											"// pauluZ - 11.2018",
+											"let pZ = '(pZ) ';",
+											"// Instytut Kardiologii - Warszawa (Anin)",
+											"",
+											"// Config for WA",
+											"inner = 'WA';",
+											"",
+											"let study_str = 'StudyO_'+inner+'_STR';",
+											"let list_str  = 'StudySubject_'+inner+'_LIST';",
+											"let idx_str   = 'SS_'+inner+'_INDEX';",
+											"",
+											"// Pre-request Script",
+											"let study             = pm.environment.get(study_str) || '-';",
+											"let StudySubject_json = pm.environment.get(list_str)  || '[]';",
+											"let list_idx          = pm.environment.get(idx_str)   || 0;",
+											"",
+											"try {",
+											"    list_arr = JSON.parse(StudySubject_json);",
+											"} catch (e) {",
+											"    console.error(pZ + e.name + ': ' + e.message);",
+											"    // Request is not sent",
+											"    throw new Error(pZ + 'Error while parsing json (check Environment StudySubject_*_LIST variable)');",
+											"}",
+											"",
+											"list_idx = parseInt(list_idx);",
+											"",
+											"pm.variables.set('keepRunning', 'false');",
+											"",
+											"// first: check if index exists",
+											"if (list_arr[list_idx]) {",
+											"    ",
+											"    // set URL variables",
+											"    pm.variables.set('StudyO', study);",
+											"    pm.variables.set('StudySubject', list_arr[list_idx]);",
+											"",
+											"    // increment INDEX for next request",
+											"    list_idx++;",
+											"    ",
+											"    // second: check if next index exists and we can proceed",
+											"    if (list_arr[list_idx]) {",
+											"        pm.environment.set(idx_str, list_idx);",
+											"",
+											"        pm.variables.set('keepRunning', inner);",
+											"    }",
+											"} else {",
+											"    // Request is not sent",
+											"    throw new Error(pZ + 'StudySubject_*_LIST is missing (set Environment variable)');",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept-Language",
+										"type": "text",
+										"value": "pl,en-GB;q=0.9,en;q=0.8"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "https://kcri.eclinicalhosting.com/OpenClinica/rest/clinicaldata/json/view/{{StudyO}}/{{StudySubject}}/*/*?includeDNs=y&includeAudits=y",
+									"protocol": "https",
+									"host": [
+										"kcri",
+										"eclinicalhosting",
+										"com"
+									],
+									"path": [
+										"OpenClinica",
+										"rest",
+										"clinicaldata",
+										"json",
+										"view",
+										"{{StudyO}}",
+										"{{StudySubject}}",
+										"*",
+										"*"
+									],
+									"query": [
+										{
+											"key": "includeDNs",
+											"value": "y",
+											"description": "Ten parametr jest w GET chociaż wygląda na Domyślny"
+										},
+										{
+											"key": "includeAudits",
+											"value": "y",
+											"description": "Ten parametr jest w GET chociaż wygląda na Domyślny"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Instytut Kardiologii\r\nim. Prymasa Tysiąclecia Stefana Kardynała Wyszyńskiego\r\nul. Alpejska 42\r\n04-628 Warszawa (Anin)\r\n\r\nhttps://www.ikard.pl/",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5267e73d-fa8e-4dbf-bded-4a2c627306ab",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "3c7e3721-bdbb-4017-8054-cd65412d8640",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "WB - Banach",
+					"item": [
+						{
+							"name": "WB requests",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "a4c749e0-188c-4346-862f-135be73357d9",
+										"exec": [
+											"// pauluZ - 11.2018",
+											"",
+											"let StudySubject = pm.variables.get('StudySubject');",
+											"let keepRunning  = pm.variables.get('keepRunning') || 'false';",
+											"",
+											"if (keepRunning != 'false') {",
+											"    ",
+											"    // Very important! Here we prepare a Request Name in Postman",
+											"    postman.setNextRequest(keepRunning + ' requests');",
+											"    ",
+											"    console.log('Processed: ' + StudySubject);",
+											"} else {",
+											"    console.log('End processed: ' + StudySubject)",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "5c466051-f9c2-4282-9f64-61e22baea8b9",
+										"exec": [
+											"// pauluZ - 11.2018",
+											"let pZ = '(pZ) ';",
+											"// Samodzielny Publiczny Centralny Szpital Kliniczny ul. Stefana Banacha",
+											"",
+											"// Config for WB",
+											"inner = 'WB';",
+											"",
+											"let study_str = 'StudyO_'+inner+'_STR';",
+											"let list_str  = 'StudySubject_'+inner+'_LIST';",
+											"let idx_str   = 'SS_'+inner+'_INDEX';",
+											"",
+											"// Pre-request Script",
+											"let study             = pm.environment.get(study_str) || '-';",
+											"let StudySubject_json = pm.environment.get(list_str)  || '[]';",
+											"let list_idx          = pm.environment.get(idx_str)   || 0;",
+											"",
+											"try {",
+											"    list_arr = JSON.parse(StudySubject_json);",
+											"} catch (e) {",
+											"    console.error(pZ + e.name + ': ' + e.message);",
+											"    // Request is not sent",
+											"    throw new Error(pZ + 'Error while parsing json (check Environment StudySubject_*_LIST variable)');",
+											"}",
+											"",
+											"list_idx = parseInt(list_idx);",
+											"",
+											"pm.variables.set('keepRunning', 'false');",
+											"",
+											"// first: check if index exists",
+											"if (list_arr[list_idx]) {",
+											"    ",
+											"    // set URL variables",
+											"    pm.variables.set('StudyO', study);",
+											"    pm.variables.set('StudySubject', list_arr[list_idx]);",
+											"",
+											"    // increment INDEX for next request",
+											"    list_idx++;",
+											"    ",
+											"    // second: check if next index exists and we can proceed",
+											"    if (list_arr[list_idx]) {",
+											"        pm.environment.set(idx_str, list_idx);",
+											"",
+											"        pm.variables.set('keepRunning', inner);",
+											"    }",
+											"} else {",
+											"    // Request is not sent",
+											"    throw new Error(pZ + 'StudySubject_*_LIST is missing (set Environment variable)');",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept-Language",
+										"type": "text",
+										"value": "pl,en-GB;q=0.9,en;q=0.8"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "https://kcri.eclinicalhosting.com/OpenClinica/rest/clinicaldata/json/view/{{StudyO}}/{{StudySubject}}/*/*?includeDNs=y&includeAudits=y",
+									"protocol": "https",
+									"host": [
+										"kcri",
+										"eclinicalhosting",
+										"com"
+									],
+									"path": [
+										"OpenClinica",
+										"rest",
+										"clinicaldata",
+										"json",
+										"view",
+										"{{StudyO}}",
+										"{{StudySubject}}",
+										"*",
+										"*"
+									],
+									"query": [
+										{
+											"key": "includeDNs",
+											"value": "y",
+											"description": "Ten parametr jest w GET chociaż wygląda na Domyślny"
+										},
+										{
+											"key": "includeAudits",
+											"value": "y",
+											"description": "Ten parametr jest w GET chociaż wygląda na Domyślny"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Samodzielny Publiczny Centralny Szpital Kliniczny\r\nw Warszawie\r\nul. Stefana Banacha 1a\r\n02-097 Warszawa\r\n\r\nhttps://spcsk.pl/",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5267e73d-fa8e-4dbf-bded-4a2c627306ab",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "3c7e3721-bdbb-4017-8054-cd65412d8640",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "OP - Opole",
+					"item": [
+						{
+							"name": "OP requests",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "a4c749e0-188c-4346-862f-135be73357d9",
+										"exec": [
+											"// pauluZ - 11.2018",
+											"",
+											"let StudySubject = pm.variables.get('StudySubject');",
+											"let keepRunning  = pm.variables.get('keepRunning') || 'false';",
+											"",
+											"if (keepRunning != 'false') {",
+											"    ",
+											"    // Very important! Here we prepare a Request Name in Postman",
+											"    postman.setNextRequest(keepRunning + ' requests');",
+											"    ",
+											"    console.log('Processed: ' + StudySubject);",
+											"} else {",
+											"    console.log('End processed: ' + StudySubject)",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "5c466051-f9c2-4282-9f64-61e22baea8b9",
+										"exec": [
+											"// pauluZ - 11.2018",
+											"let pZ = '(pZ) ';",
+											"// Uniwersytecki Szpital Kliniczny w Opolu",
+											"",
+											"// Config for OP",
+											"inner = 'OP';",
+											"",
+											"let study_str = 'StudyO_'+inner+'_STR';",
+											"let list_str  = 'StudySubject_'+inner+'_LIST';",
+											"let idx_str   = 'SS_'+inner+'_INDEX';",
+											"",
+											"// Pre-request Script",
+											"let study             = pm.environment.get(study_str) || '-';",
+											"let StudySubject_json = pm.environment.get(list_str)  || '[]';",
+											"let list_idx          = pm.environment.get(idx_str)   || 0;",
+											"",
+											"try {",
+											"    list_arr = JSON.parse(StudySubject_json);",
+											"} catch (e) {",
+											"    console.error(pZ + e.name + ': ' + e.message);",
+											"    // Request is not sent",
+											"    throw new Error(pZ + 'Error while parsing json (check Environment StudySubject_*_LIST variable)');",
+											"}",
+											"",
+											"list_idx = parseInt(list_idx);",
+											"",
+											"pm.variables.set('keepRunning', 'false');",
+											"",
+											"// first: check if index exists",
+											"if (list_arr[list_idx]) {",
+											"    ",
+											"    // set URL variables",
+											"    pm.variables.set('StudyO', study);",
+											"    pm.variables.set('StudySubject', list_arr[list_idx]);",
+											"",
+											"    // increment INDEX for next request",
+											"    list_idx++;",
+											"    ",
+											"    // second: check if next index exists and we can proceed",
+											"    if (list_arr[list_idx]) {",
+											"        pm.environment.set(idx_str, list_idx);",
+											"",
+											"        pm.variables.set('keepRunning', inner);",
+											"    }",
+											"} else {",
+											"    // Request is not sent",
+											"    throw new Error(pZ + 'StudySubject_*_LIST is missing (set Environment variable)');",
+											"}",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept-Language",
+										"type": "text",
+										"value": "pl,en-GB;q=0.9,en;q=0.8"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "https://kcri.eclinicalhosting.com/OpenClinica/rest/clinicaldata/json/view/{{StudyO}}/{{StudySubject}}/*/*?includeDNs=y&includeAudits=y",
+									"protocol": "https",
+									"host": [
+										"kcri",
+										"eclinicalhosting",
+										"com"
+									],
+									"path": [
+										"OpenClinica",
+										"rest",
+										"clinicaldata",
+										"json",
+										"view",
+										"{{StudyO}}",
+										"{{StudySubject}}",
+										"*",
+										"*"
+									],
+									"query": [
+										{
+											"key": "includeDNs",
+											"value": "y",
+											"description": "Ten parametr jest w GET chociaż wygląda na Domyślny"
+										},
+										{
+											"key": "includeAudits",
+											"value": "y",
+											"description": "Ten parametr jest w GET chociaż wygląda na Domyślny"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Uniwersytecki Szpital Kliniczny\r\nw Opolu\r\nal. W. Witosa 26\r\n45-401 Opole\r\n\r\nhttp://usk.opole.pl/",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5267e73d-fa8e-4dbf-bded-4a2c627306ab",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "3c7e3721-bdbb-4017-8054-cd65412d8640",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				}
+			],
+			"description": "Save all responses to the local files",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "462e4f68-cc77-4db8-9e79-a90b172f4355",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "014425d3-1ff8-4700-9414-1eeb5c8f01a9",
+						"type": "text/javascript",
+						"exec": [
+							"// pauluZ - 11.2018",
+							"",
+							"let StudyName = pm.variables.get('StudySubject') || 'pz_error';",
+							"// examples of StudySubject: 'SS_WA001', 'SS_WB04', 'SS_WB06_5568'",
+							"StudyName = StudyName.slice(3).toLowerCase();",
+							"",
+							"// The data to be written to file",
+							"let dataToFile = {",
+							"    requestName:   StudyName,",
+							"    fileExtension: 'json',",
+							"    responseData:  pm.response.text()",
+							"};",
+							"",
+							"// Node.js script as a server",
+							"pm.sendRequest({",
+							"    url:    'http://localhost:3000/write',",
+							"    method: 'POST',",
+							"    header: 'Content-Type:application/json',",
+							"    body: {",
+							"        mode: 'raw',",
+							"        raw: JSON.stringify(dataToFile)",
+							"    }",
+							"}, function(err, res) {",
+							"    console.log(res);",
+							"});",
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "fe03656c-f63a-4c46-b52e-7d6570fd85b0",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "48feeab2-b235-4fd3-87ca-f17fb7a3db62",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "dd9e7cd6-8c07-4bcd-bb19-d787d787d938",
+			"key": "MY_NAME",
+			"value": "please_enter",
+			"type": "string"
+		},
+		{
+			"id": "a3a42d6d-17e7-4089-bf59-74199135bc17",
+			"key": "MY_PASS",
+			"value": "please_enter",
+			"type": "string"
+		}
+	]
+}
